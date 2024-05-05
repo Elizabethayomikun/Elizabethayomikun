@@ -1,63 +1,115 @@
-def add(x, y):
-    return x + y
+from tkinter import *
 
-def subtract(x, y):
-    return x - y
+class Calculator:
+  def __init__(self):
+    self.GUI = Tk()
+    self.expression = ""
+    self.operation = StringVar()
 
-def multiply(x, y):
-    return x * y
+    self.GUI.configure(background = "pink")
+    self.GUI.title("Kids Calculator")
+    self.GUI.geometry("700x500")
 
-def divide(x, y):
-    if y != 0:
-        return x / y
-    else:
-        return "Error: Division by zero"
+    self.create_widgets()
 
-# Function to get user input for operation and numeric values
-def get_user_input():
-    print("Select operation:")
-    print("1. Addition")
-    print("2. Subtraction")
-    print("3. Multiplication")
-    print("4. Division")
-    print("5. Exit")
+  def create_widgets(self):
+    self.expression_field = Entry(
+      self.GUI,
+      textvariable = self.operation,
+      font=('Colibry', 15),
+      borderwidth=3,
+      justify='right'
+    )
 
-    choice = input("Enter choice (1/2/3/4/5): ")
+    self.expression_field.grid(row=0, column=0, columnspan=4, pady=5, ipadx=50, ipady=10)
 
-    if choice not in ['1', '2', '3', '4', '5']:
-        print("Invalid choice. Please enter a valid choice.")
-        return get_user_input()
+    buttons_data = [
+      ('1', 'red'), ('2', 'red'), ('3', 'red'), ('+', 'orange'),
+      ('4', 'red'), ('5', 'red'), ('6', 'red'), ('-', 'orange'),
+      ('7', 'red'), ('8', 'red'), ('9', 'red'), ('*', 'orange'),
+      ('C', 'red'), ('0', 'red'), ('=', 'red'), ('/', 'orange'),
+      ('M+', 'yellow'), ('MRC', 'yellow'), ('MC', 'yellow')
+    ]
 
-    if choice == '5':
-        return choice, None, None  # Return None for num1 and num2 when the user chooses to exit
+    row_Number = 1
+    column_Number = 0
+  
+    for (text, bg_color) in buttons_data:
+      button = Button(
+        self.GUI,
+        text=text,
+        fg='black',
+        bg=bg_color,
+        font=('Colibry', 15),
+        height=2,
+        width=7,
+        borderwidth=0,
+        relief="groove"
+        ) 
+      button.grid(
+        row=row_Number,
+        column=column_Number,
+        pady=5,
+        padx=5
+        )
+  
+      if text == 'C':
+        button.config(command=self.clear)
+      elif text == '=':
+        button.config(command=self.calculate)
+      elif text == 'M+':
+        button.config(command=self.save_to_memory)
+      elif text == 'MRC':
+        button.config(command=self.retrieve_from_memory)
+      elif text == 'MC':
+        button.config(command=self.clear_memory)
+      else:
+        button.config(command=lambda t=text: self.press(t)) 
+  
+      column_Number += 1
+      if column_Number > 3:
+          column_Number = 0
+          row_Number += 1
 
-    num1 = float(input("Enter first number: "))
-    num2 = float(input("Enter second number: "))
+  def press(self, num):
+    self.expression += str(num)
+    self.operation.set(self.expression)
 
-    return choice, num1, num2
+  def calculate(self):
+    try:
+        result = eval(self.expression)
+        self.operation.set(result)
+    except Exception:
+        self.operation.set("Error")
+    finally:
+        self.expression = ""
 
-# Main calculator program
-def calculator():
-    while True:
-        choice, num1, num2 = get_user_input()
+  def clear(self):
+    self.expression = ""
+    self.operation.set("")
 
-        if choice == '5':
-            print("Exiting the calculator program. Goodbye!")
-            break
+  def save_to_memory(self):
+    value = self.operation.get()
+    with open("memory.txt", "w") as file:
+      file.write(value)
 
-        if choice in ['1', '2', '3', '4']:
-            if choice == '1':
-                result = add(num1, num2)
-                print(f"{num1} + {num2} = {result}")
-            elif choice == '2':
-                result = subtract(num1, num2)
-                print(f"{num1} - {num2} = {result}")
-            elif choice == '3':
-                result = multiply(num1, num2)
-                print(f"{num1} * {num2} = {result}")
-            elif choice == '4':
-                result = divide(num1, num2)
-                print(f"{num1} / {num2} = {result}")
-        else:
-            print("Invalid choice. Please enter a valid choice.")
+  def retrieve_from_memory(self):
+    try:
+      with open("memory.txt", "r") as file:
+          value = file.read()
+          self.expression += value
+          self.operation.set(self.expression)
+    except FileNotFoundError:
+      self.operation.set("Nothing stored yet 🤓")
 
+  def clear_memory(self):
+    with open("memory.txt", "w") as file:
+      file.write("")
+      self.operation.set("Memory Cleared")
+
+  def run_calculator(self):
+    self.GUI.mainloop()
+
+if __name__ == "__main__":
+  calculator = Calculator()
+  calculator.run_calculator()
